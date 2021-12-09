@@ -1,0 +1,133 @@
+---
+title: "project"
+output: html_document
+---
+PROJECT
+
+Cleaning
+```{r}
+as.data.frame(project_data)
+View(project_data)
+colnames(project_data)
+
+#translating
+
+project_data$subj.<- project_data$nob
+project_data$gender<- project_data$płeć
+project_data$age<- project_data$wiek
+project_data$class<- project_data$klasa
+
+#reverse coding
+library(car)
+
+project_data$SD5<- recode(project_data$SD5,'1=5;2=4;3=3;4=2;5=1')
+project_data$SD17<- recode(project_data$SD17,'1=5;2=4;3=3;4=2;5=1')
+project_data$SD23<- recode(project_data$SD23,'1=5;2=4;3=3;4=2;5=1')
+project_data$SD6<- recode(project_data$SD6,'1=5;2=4;3=3;4=2;5=1')
+
+#test scoring
+
+project_data$narc<- (project_data$SD2+project_data$SD5+project_data$SD8+project_data$SD11+project_data$SD14+project_data$SD17+project_data$SD20+project_data$SD23+project_data$SD25)/9
+
+project_data$psych<- (project_data$SD3+project_data$SD6+project_data$SD9+project_data$SD12+project_data$SD15+project_data$SD18+project_data$SD26)/7
+
+project_data$mach<- (project_data$SD4+project_data$SD7+project_data$SD10+project_data$SD13+project_data$SD16+project_data$SD19+project_data$SD22+project_data$SD24)/8
+
+project_data$total<- (project_data$narc+project_data$psych+project_data$mach)/3
+
+```
+
+
+descriptive statistics
+```{r}
+library(ggplot2)
+library(Rmisc)
+
+ggplot(projectsum,aes(age,total))+geom_bar(stat="identity")+geom_errorbar(ymin=projectsum$total-projectsum$sd,ymax=projectsum$total+projectsum$sd)+theme_light()+ylim(c(0,4))
+projectsum<- as.data.frame(summarySE(data=project_data,measurevar="total",groupvars="age"))
+
+View(projectsum)
+summary(projectsum)
+
+count(project_data$wiek)
+
+
+ no12<- subset(project_data,wiek>12)
+  
+View(no12)
+
+print(no12$wiek==12)
+
+#subset with no age 12
+
+no12sum<- as.data.frame(summarySE(data=no12,measurevar="total",groupvars="age"))
+
+ggplot(no12sum,aes(age,total))+geom_bar(stat="identity",fill="pink")+geom_errorbar(ymin=no12sum$total-no12sum$sd,ymax=no12sum$total+no12sum$sd)+theme_light()+ylim(c(0,4))+ylab("Total SD3 Score")+xlab("Age")
+
+  
+```
+
+correlational tests
+```{r}
+
+summary(aov(total~as.factor(age),data=no12))
+
+
+F(between subjectdf,dferror(residual)=f statstic,p=pvalue)
+
+#post hoc tests
+
+TukeyHSD(aov(total~as.factor(age),data=no12))
+
+# thirteen y/os statistiacally different from allother groups
+
+library(lsr)
+
+etaSquared(aov(total~as.factor(age),data=no12))
+
+this is a small effect, between .01 and .06
+
+```
+
+
+three spearate variables
+```{r}
+dont do post hoc if not significant, p value compared to alpha, effect size is how big effect is
+
+
+#wont havea huge method section (examples on week 14, or in file section)
+narc
+
+narcsum<- as.data.frame(summarySE(data=no12,measurevar="narc",groupvars="age"))
+summary(aov(narc~as.factor(age),data=no12))
+TukeyHSD(aov(narc~as.factor(age),data=no12))
+etaSquared(aov(narc~as.factor(age),data=no12))
+
+ggplot(narcsum,aes(age,narc))+geom_bar(stat="identity",fill="pink")+geom_errorbar(ymin=narcsum$narc-narcsum$sd,ymax=narcsum$narc+narcsum$sd)+theme_light()+ylim(c(0,4))+ylab("Narcissism")+xlab("Age")
+
+
+psych
+
+psychsum<- as.data.frame(summarySE(data=no12,measurevar="psych",groupvars="age"))
+summary(aov(psych~as.factor(age),data=no12))
+TukeyHSD(aov(psych~as.factor(age),data=no12))
+etaSquared(aov(psych~as.factor(age),data=no12))
+
+ggplot(psychsum,aes(age,psych))+geom_bar(stat="identity",fill="pink")+geom_errorbar(ymin=psychsum$psych-psychsum$sd,ymax=psychsum$psych+psychsum$sd)+theme_light()+ylim(c(0,4))+ylab("Psycopathy")+xlab("Age")
+
+
+mach
+
+machsum<- as.data.frame(summarySE(data=no12,measurevar="mach",groupvars="age"))
+summary(aov(mach~as.factor(age),data=no12))
+TukeyHSD(aov(mach~as.factor(age),data=no12))
+etaSquared(aov(mach~as.factor(age),data=no12))
+
+
+ggplot(machsum,aes(age,mach))+geom_bar(stat="identity",fill="pink")+geom_errorbar(ymin=machsum$mach-machsum$sd,ymax=machsum$mach+machsum$sd)+theme_light()+ylim(c(0,4))+ylab("Machiavellianism")+xlab("Age")
+
+
+```
+
+
+
